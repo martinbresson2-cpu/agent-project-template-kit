@@ -16,11 +16,11 @@ The repo has two layers:
 
    - create_template_repo.py      # creates a new project from the template
    - project_template/            # copied into each new project
-    - README.md
-    - CLAUDE.md
-    - PROMPT_START.md
-    -  docs/
-    -  scripts/
+        - README.md
+        - CLAUDE.md
+        - PROMPT_START.md
+        -  docs/
+        -  scripts/
 
 ## How to start a new project
 
