@@ -37,19 +37,45 @@ If the goal is to start or bootstrap a real project, create a fresh copy from `p
 
 - root files support maintaining and generating the template
 - `project_template/` contains the files that ship into a new project
+- `project_template/.agent_shims/` contains tool-specific compatibility entrypoints used during generation
 
-Project-facing docs such as `README.md`, `AGENT.md`, and `PROMPT_START.md` belong in `project_template/`.
+Project-facing docs such as `README.md`, `AGENTS.md`, and `PROMPT_START.md` belong in `project_template/`.
+
+---
+
+## Canonical instructions and compatibility shims
+
+This template uses:
+
+- `AGENTS.md` as the canonical agent instruction file
+- thin tool-specific shim files such as `CLAUDE.md` or `GEMINI.md` as compatibility entrypoints
+
+Shim files must stay short and point back to `AGENTS.md` rather than duplicating the full operating guide.
+
+When adding support for another coding agent:
+1. confirm the convention is real and worth supporting,
+2. prefer a thin root-level shim if possible,
+3. add it under `project_template/.agent_shims/`,
+4. update the generator only if the support is stable enough to justify maintenance cost,
+5. avoid speculative or weakly supported integrations.
 
 ---
 
 ## When to use the generator
 
-To start a new project from this template, run:
+To start a new project from this template, run for example:
 
-    python create_template_repo.py ../my_new_project
+```bash
+python create_template_repo.py ../my_new_project
+python create_template_repo.py ../my_new_project --agent generic
+python create_template_repo.py ../my_new_project --agent claude
+python create_template_repo.py ../my_new_project --agent gemini
+python create_template_repo.py ../my_new_project --agent multi-agent
+```
 
 Then open the new project folder and follow its local:
-- `AGENT.md`
+- `AGENTS.md`
+- the relevant tool-specific shim if one was generated
 - `PROMPT_START.md`
 
 Do not bootstrap `project_template/` in place as if it were the real project.
@@ -63,6 +89,8 @@ Do not bootstrap `project_template/` in place as if it were the real project.
 - Do not add files that many projects will immediately delete unless they clearly earn their cost.
 - Avoid duplicating guidance between root docs and template docs.
 - If a change affects generated projects, edit the files inside `project_template/`.
+- Keep `AGENTS.md` as the single source of truth for agent instructions.
+- Do not create full duplicated instruction files for each tool unless absolutely necessary.
 
 ---
 
