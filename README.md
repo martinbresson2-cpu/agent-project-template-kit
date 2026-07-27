@@ -12,15 +12,15 @@ It contains both:
 The repo has two layers:
 
 - root level — maintenance and generation
-- `project_template/` — the actual starter project payload
+- `project_template/` — the actual starter project payload :
 
-    create_template_repo.py      # creates a new project from the template
-    project_template/            # copied into each new project
-      README.md
-      CLAUDE.md
-      PROMPT_START.md
-      docs/
-      scripts/
+   - create_template_repo.py      # creates a new project from the template
+   - project_template/            # copied into each new project
+    - README.md
+    - CLAUDE.md
+    - PROMPT_START.md
+    -  docs/
+    -  scripts/
 
 ## How to start a new project
 
