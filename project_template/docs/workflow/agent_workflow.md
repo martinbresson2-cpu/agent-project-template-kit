@@ -4,8 +4,8 @@
 
 > Repeatable workflow for AI-assisted work in this repository.
 > Keep this file lean.
-> Stable operating rules belong in `CLAUDE.md`.
-> Delete this file during template bootstrap if `CLAUDE.md` is enough.
+> Stable operating rules belong in `AGENTS.md`.
+> Delete this file during template bootstrap if `AGENTS.md` is enough.
 
 ---
 

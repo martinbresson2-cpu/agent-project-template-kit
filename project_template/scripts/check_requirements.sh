@@ -3,7 +3,7 @@ set -euo pipefail
 
 required_files=(
   "README.md"
-  "CLAUDE.md"
+  "AGENTS.md"
   "PROMPT_START.md"
   "docs/roadmap/current_feature.md"
   "docs/roadmap/next_phase.md"

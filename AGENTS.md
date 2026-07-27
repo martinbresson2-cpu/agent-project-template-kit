@@ -38,7 +38,7 @@ If the goal is to start or bootstrap a real project, create a fresh copy from `p
 - root files support maintaining and generating the template
 - `project_template/` contains the files that ship into a new project
 
-Project-facing docs such as `README.md`, `CLAUDE.md`, and `PROMPT_START.md` belong in `project_template/`.
+Project-facing docs such as `README.md`, `AGENT.md`, and `PROMPT_START.md` belong in `project_template/`.
 
 ---
 
@@ -49,7 +49,7 @@ To start a new project from this template, run:
     python create_template_repo.py ../my_new_project
 
 Then open the new project folder and follow its local:
-- `CLAUDE.md`
+- `AGENT.md`
 - `PROMPT_START.md`
 
 Do not bootstrap `project_template/` in place as if it were the real project.

@@ -38,7 +38,7 @@ This improves both clarity and token efficiency.
 When creating a new project from this template:
 
 1. Open this project with the coding agent.
-2. Read `CLAUDE.md`.
+2. Read `AGENTS.md`.
 3. Give the agent the contents of `PROMPT_START.md`.
 4. Let the agent:
    - understand the new project,
@@ -49,7 +49,7 @@ When creating a new project from this template:
 
 ## Core files
 
-- `CLAUDE.md` — main operating instructions for the agent
+- `AGENTS.md` — main operating instructions for the agent
 - `PROMPT_START.md` — first prompt for bootstrap
 - `docs/roadmap/current_feature.md` — the single active workstream
 - `docs/roadmap/next_phase.md` — upcoming milestones

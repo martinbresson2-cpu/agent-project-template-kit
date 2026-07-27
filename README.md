@@ -17,20 +17,20 @@ The repository has two layers:
 ```text
 agent-project-template-kit/
 ├── README.md                # Guide for maintaining and using this template repository
-├── CLAUDE.md                # Instructions for agents working on the template repository itself
+├── AGENTS.md                # Instructions for agents working on the template repository itself
 ├── create_template_repo.py  # Generates a new project from project_template/
 └── project_template/        # Complete starter payload copied into each generated project
     ├── README.md            # Starting README to customize for the generated project
-    ├── CLAUDE.md            # Operating instructions for agents building the generated project
+    ├── AGENTS.md            # Canonical operating instructions for generated projects
     ├── PROMPT_START.md      # Initial prompt for bootstrapping and pruning the generated project
+    ├── .agent_shims/        # Internal tool-specific compatibility files promoted at generation time
     ├── docs/
     │   ├── design/          # Architecture, data model, and technical decisions
     │   ├── fixes/           # Outstanding bugs and defects
     │   ├── product/         # Product vision and scope
     │   ├── roadmap/         # Active workstream, future phases, and completed work
     │   └── workflow/        # Agent workflow and human handoffs
-    ├── scripts/             # Scripts copied into generated projects
-    └── templates/           # Reusable document templates for generated projects
+    └── scripts/             # Scripts copied into generated projects
 ```
 
 ### Root files versus project template files
@@ -38,50 +38,94 @@ agent-project-template-kit/
 The similarly named files serve different scopes:
 
 - **Root `README.md`:** Explains how to use, maintain, and improve the shared template repository.
-- **Root `CLAUDE.md`:** Guides agents modifying the template system, generator, or starter payload.
+- **Root `AGENTS.md`:** Guides agents modifying the template system, generator, or starter payload.
 - **`project_template/README.md`:** Becomes the README of each generated project and must be customized during bootstrap.
-- **`project_template/CLAUDE.md`:** Becomes the operating guide for agents implementing the generated project.
+- **`project_template/AGENTS.md`:** Becomes the canonical operating guide for agents implementing the generated project.
 
 Changes at the root affect how the template repository is maintained.
 
 Changes inside `project_template/` affect the default contents of future generated projects.
 
-### Root-level responsibility
+## Canonical agent instructions and supported shims
 
-The repository root contains the files used to maintain and distribute the template.
+This template uses:
 
-- `create_template_repo.py` creates a new project from the contents of `project_template/`.
-- `project_template/` contains the complete starter project copied to the destination folder.
+- **`AGENTS.md`** as the canonical agent instruction file
+- optional tool-specific shim files as compatibility entrypoints
 
-### Starter project responsibility
+### Currently supported compatibility shims
 
-The `project_template/` directory contains the files an AI coding agent uses when starting and operating a real project.
+The generator currently supports these agent profiles:
 
-Key files include:
+- **`generic`** — generates the project with `AGENTS.md` only
+- **`claude`** — generates the project with `AGENTS.md` and `CLAUDE.md`
+- **`gemini`** — generates the project with `AGENTS.md` and `GEMINI.md`
+- **`multi-agent`** — generates the project with `AGENTS.md` and all currently available shim files
 
-- `README.md` for project-level orientation
-- `CLAUDE.md` for agent operating rules
-- `PROMPT_START.md` for the initial project bootstrap
-- `docs/` for roadmap, fixes, architecture, product, and workflow documentation
-- `scripts/` for project-specific utility scripts
-- `templates/` for reusable documentation templates
+### Supported shim files today
+
+- `CLAUDE.md`
+- `GEMINI.md`
+
+These shim files are intentionally short and point back to `AGENTS.md` rather than duplicating full operating instructions.
+
+This keeps the template:
+
+- easier to maintain
+- less likely to drift across tools
+- more portable between coding agents
 
 ## Start a new project
 
-From the repository root, run:
+From the repository root, run one of the following:
 
 ```bash
 python create_template_repo.py ../my_new_project
+python create_template_repo.py ../my_new_project --agent claude
+python create_template_repo.py ../my_new_project --agent gemini
+python create_template_repo.py ../my_new_project --agent multi-agent
 ```
 
-This creates a new project folder using the contents of `project_template/`.
+### What each option does
 
-Then:
+- **Default / `--agent generic`**
+  - Creates a new project with the canonical `AGENTS.md`
+  - Does not add tool-specific root shim files
 
-1. Open the generated project folder with your coding agent.
-2. Read `CLAUDE.md`.
-3. Use `PROMPT_START.md` to begin the bootstrap process.
-4. Adapt and prune the generated structure before implementation.
+- **`--agent claude`**
+  - Creates a new project with `AGENTS.md`
+  - Adds `CLAUDE.md` as a compatibility entrypoint
+
+- **`--agent gemini`**
+  - Creates a new project with `AGENTS.md`
+  - Adds `GEMINI.md` as a compatibility entrypoint
+
+- **`--agent multi-agent`**
+  - Creates a new project with `AGENTS.md`
+  - Adds all currently available root-level shim files
+
+Tool-specific shim files are stored in `project_template/.agent_shims/` and are promoted into the generated project root only when needed. The internal shim folder should not remain in the final generated project.
+
+## After generation
+
+Open the generated project folder with your coding agent, then:
+
+1. Read `AGENTS.md`, or the relevant tool-specific shim if one was generated
+2. Read `PROMPT_START.md`
+3. Adapt and prune the generated structure before implementation
+
+### If your coding agent supports something newer than this template currently provides
+
+If the generated project is being used with a coding agent or repo-instruction convention not yet supported here, the agent or human may add the needed compatibility file(s) directly inside the generated project.
+
+Rules for doing that:
+
+- keep `AGENTS.md` as the canonical source of truth
+- make new compatibility files thin entrypoints whenever possible
+- avoid duplicating the full operating guide unless there is a strong tool-specific reason
+- prefer adding new support in the generated project first, then upstreaming it to this template if it proves broadly useful
+
+If a new compatibility convention becomes reliably useful across projects, it should later be added back to this template in a generalized way.
 
 > [!IMPORTANT]
 > Do not build a real product directly inside this template repository. Generate a separate project folder first.
@@ -152,6 +196,12 @@ Maintain the template
         |
         v
 Generate a new project
+        |
+        v
+Read AGENTS.md or selected shim
+        |
+        v
+Use PROMPT_START.md
         |
         v
 Understand the real project

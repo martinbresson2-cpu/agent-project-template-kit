@@ -37,7 +37,7 @@ Please do the following in order:
 ### 1. Read only the minimum required files
 Start with:
 - `README.md`
-- `CLAUDE.md`
+- `AGENTS.md`
 - `docs/roadmap/current_feature.md`
 - `docs/roadmap/next_phase.md`
 
@@ -67,7 +67,7 @@ Once the project is understood:
 ### 4. Fill the core files
 Create or update at least:
 - `README.md`
-- `CLAUDE.md`
+- `AGENTS.md`
 - `docs/roadmap/current_feature.md`
 - `docs/roadmap/next_phase.md`
 - `docs/fixes/fixes_log.md`
