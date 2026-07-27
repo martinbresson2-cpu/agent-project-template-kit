@@ -1,0 +1,12 @@
+# --- web app ---
+.vite/
+.turbo/
+.parcel-cache/
+.cache/
+*.tsbuildinfo
+.env.local
+.vercel/
+.netlify/
+storybook-static/
+playwright-report/
+.eslintcache

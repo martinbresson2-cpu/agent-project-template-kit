@@ -1,0 +1,22 @@
+# --- mobile app ---
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+# Native build outputs
+*.iml
+.gradle/
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/.symlinks/
+DerivedData/
+# Packaged binaries
+*.apk
+*.aab
+*.ipa
+# Capacitor / React Native / Expo
+.expo/
+ios/build/

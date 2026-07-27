@@ -37,7 +37,8 @@ If the goal is to start or bootstrap a real project, create a fresh copy from `p
 
 - root files support maintaining and generating the template
 - `project_template/` contains the files that ship into a new project
-- `project_template/.agent_shims/` contains tool-specific compatibility entrypoints used during generation
+- `project_template/.agent_shims/` contains tool-specific compatibility entrypoints, plus the `claude_home/` `.claude/` config seed, promoted during generation
+- `profiles/` contains composable per-type overlays (`web`, `mobile`, `unity`, `python`); each is a `gitignore.append` and/or a `files/` tree applied by `--type`
 
 Project-facing docs such as `README.md`, `AGENTS.md`, and `PROMPT_START.md` belong in `project_template/`.
 
@@ -72,10 +73,19 @@ python create_template_repo.py ../my_new_project --agent claude
 python create_template_repo.py ../my_new_project --agent gemini
 python create_template_repo.py ../my_new_project --agent multi-agent
 python create_template_repo.py ../my_new_project --agent claude --minimal
+python create_template_repo.py ../my_new_project --type python,web
 ```
 
-`--agent` selects which entrypoint shims ship; `--minimal` prunes the payload to
-a lean core for small projects. They are orthogonal and combine freely.
+`--agent` selects which entrypoint shims (and the `.claude/` seed) ship;
+`--type` applies composable per-type overlays; `--minimal` prunes the payload to
+a lean core for small projects. All three are orthogonal and combine freely.
+
+When adding or changing a type overlay, keep it to what is *always* common to
+that type: ignore rules and fill-in-the-blank prose (a stack-notes stub, a
+workflow doc). **An overlay must never ship a live config with a tool,
+framework, or port baked in** — that is a decision the project makes, not the
+template. A `files/` tree is a standing invitation to add "one more helpful
+default"; resist it. If an overlay encodes a real decision, it is too precise.
 
 Then open the new project folder and follow its local:
 - `AGENTS.md`

@@ -1,0 +1,12 @@
+# --- python ---
+*.egg-info/
+*.egg
+.eggs/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.ipynb_checkpoints/
+.python-version
+pip-wheel-metadata/

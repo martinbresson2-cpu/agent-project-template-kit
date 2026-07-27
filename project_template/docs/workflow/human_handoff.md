@@ -135,6 +135,50 @@ Provide:
 
 ---
 
+## GUI / editor task card
+
+Use this when the agent writes the files but a step must happen in a GUI the
+agent cannot drive — a game engine editor (Unity, Godot), an IDE (Xcode,
+Android Studio), a 3D tool (Blender), a cloud console, or an on-device test.
+Keep steps menu-path precise, and always end with a verify + report-back step.
+
+### H-XXX — `<editor action>`
+
+- **Priority:** 🟠 Required soon
+- **Owner:** Human
+- **Tool:** `<Unity Editor / Xcode / Blender / browser console / device>`
+- **Related work:** `docs/roadmap/current_feature.md`
+- **Status:** Open
+
+#### Why the agent cannot do this
+
+`<the action only exists inside the GUI / needs a signed-in console / needs a
+physical device>`
+
+#### Files the agent already changed
+
+- `path/to/file` — `<what changed and why it matters to this step>`
+
+#### Steps (exact)
+
+1. `<Menu > Submenu > Action>` — ...
+2. `<field / setting>` → set to `<value>`
+3. ...
+
+#### Verify
+
+- `<what to look at>` should show `<expected result>`
+
+#### Report back
+
+Provide:
+- done / blocked
+- the step that failed, if any
+- observed result vs expected
+- relevant sanitized log or screenshot
+
+---
+
 ## Sensitive actions
 
 For secrets or privileged access:

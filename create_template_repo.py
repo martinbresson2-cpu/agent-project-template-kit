@@ -11,6 +11,16 @@ DEFAULT_PROJECT_NAME = "my_new_project"
 DEFAULT_AGENT_PROFILE = "generic"
 AGENT_SHIMS_DIRNAME = ".agent_shims"
 
+# Kit-root directory holding composable per-type overlays (web, mobile, ...).
+PROFILES_DIRNAME = "profiles"
+SUPPORTED_TYPE_PROFILES = {"web", "mobile", "unity", "python"}
+
+# Agent profiles that also get a promoted `.claude/` config seed. The seed lives
+# in the template at `.agent_shims/<seed_dir>/` and is copied to `.claude/`.
+AGENT_CONFIG_SEED_DIR = "claude_home"
+CLAUDE_CONFIG_TARGET = ".claude"
+AGENT_PROFILES_WITH_CLAUDE_CONFIG = {"claude", "multi-agent"}
+
 EXCLUDED_DIRECTORIES = {
     ".git",
     "__pycache__",
@@ -50,7 +60,14 @@ MINIMAL_KEEP_PATHS = {
     "docs/roadmap/current_feature.md",
     "docs/roadmap/next_phase.md",
     "docs/fixes/fixes_log.md",
+    # The repo-snapshot tool is handy even for small projects.
+    "scripts/export_project.py",
 }
+
+# Any path under these prefixes survives --minimal (promoted agent config, etc.).
+MINIMAL_KEEP_PREFIXES = (
+    f"{CLAUDE_CONFIG_TARGET}/",
+)
 
 
 def ignore_filter(_directory: str, names: list[str]) -> set[str]:
@@ -106,6 +123,32 @@ def cleanup_shims_dir(target: Path) -> None:
         shutil.rmtree(shims_dir)
 
 
+def promote_claude_config(shims_dir: Path, target: Path) -> list[str]:
+    """
+    Copy the `.claude/` config seed (settings.json) from
+    `.agent_shims/<AGENT_CONFIG_SEED_DIR>/` into the project root's `.claude/`.
+
+    Returns the promoted project-relative paths.
+    """
+    seed_dir = shims_dir / AGENT_CONFIG_SEED_DIR
+    if not seed_dir.exists() or not seed_dir.is_dir():
+        return []
+
+    config_target = target / CLAUDE_CONFIG_TARGET
+    promoted: list[str] = []
+
+    for src in sorted(seed_dir.rglob("*")):
+        if src.is_dir():
+            continue
+        relative = src.relative_to(seed_dir)
+        dest = config_target / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        promoted.append((Path(CLAUDE_CONFIG_TARGET) / relative).as_posix())
+
+    return sorted(promoted)
+
+
 def configure_agent_profile(target: Path, agent: str) -> list[str]:
     """
     Configure which agent entrypoint files are added to the generated project root.
@@ -144,6 +187,9 @@ def configure_agent_profile(target: Path, agent: str) -> list[str]:
             shutil.copy2(shim_file, target / shim_file.name)
             promoted_shims.append(shim_file.name)
 
+        if agent in AGENT_PROFILES_WITH_CLAUDE_CONFIG:
+            promoted_shims.extend(promote_claude_config(shims_dir, target))
+
         cleanup_shims_dir(target)
         return promoted_shims
 
@@ -153,6 +199,9 @@ def configure_agent_profile(target: Path, agent: str) -> list[str]:
 
     copy_shim(shims_dir, target, shim_filename)
     promoted_shims.append(shim_filename)
+
+    if agent in AGENT_PROFILES_WITH_CLAUDE_CONFIG:
+        promoted_shims.extend(promote_claude_config(shims_dir, target))
 
     cleanup_shims_dir(target)
     return promoted_shims
@@ -181,11 +230,87 @@ def apply_minimal_profile(target: Path, keep_extra: list[str]) -> list[str]:
         relative_path = path.relative_to(target).as_posix()
         if relative_path in keep:
             continue
+        if relative_path.startswith(MINIMAL_KEEP_PREFIXES):
+            continue
 
         path.unlink()
         removed.append(relative_path)
 
     return sorted(removed)
+
+
+def parse_type_profiles(raw: str | None) -> list[str]:
+    """
+    Parse the comma-separated --type value into an ordered, de-duplicated list
+    of known type profiles. Types are composable (e.g. "python,web").
+    """
+    if not raw:
+        return []
+
+    types: list[str] = []
+    for token in raw.split(","):
+        name = token.strip().lower()
+        if not name:
+            continue
+        if name not in SUPPORTED_TYPE_PROFILES:
+            supported = ", ".join(sorted(SUPPORTED_TYPE_PROFILES))
+            raise SystemExit(
+                f"Unknown project type: '{name}'. Supported types: {supported}."
+            )
+        if name not in types:
+            types.append(name)
+
+    return types
+
+
+def overlay_profile_files(files_dir: Path, target: Path) -> list[str]:
+    """Copy a profile's `files/` tree into the project."""
+    applied: list[str] = []
+
+    for src in sorted(files_dir.rglob("*")):
+        if src.is_dir():
+            continue
+        relative = src.relative_to(files_dir)
+        dest = target / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        applied.append(relative.as_posix())
+
+    return applied
+
+
+def apply_type_profiles(target: Path, kit_root: Path, types: list[str]) -> list[str]:
+    """
+    Apply each composable type overlay to the generated project:
+    - append the type's `.gitignore` fragment,
+    - copy its `files/` tree.
+
+    Returns the sorted list of project-relative paths that were written or
+    appended to.
+    """
+    profiles_root = kit_root / PROFILES_DIRNAME
+    touched: set[str] = set()
+
+    for type_name in types:
+        profile_dir = profiles_root / type_name
+        if not profile_dir.is_dir():
+            raise SystemExit(
+                f"Type profile directory not found: {profile_dir}"
+            )
+
+        gitignore_fragment = profile_dir / "gitignore.append"
+        if gitignore_fragment.is_file():
+            fragment = gitignore_fragment.read_text(encoding="utf-8").rstrip("\n")
+            gitignore_path = target / ".gitignore"
+            with gitignore_path.open("a", encoding="utf-8") as handle:
+                handle.write(f"\n{fragment}\n")
+            touched.add(".gitignore")
+
+        files_dir = profile_dir / "files"
+        if files_dir.is_dir():
+            touched.update(overlay_profile_files(files_dir, target))
+
+    return sorted(touched)
 
 
 def parse_args() -> argparse.Namespace:
@@ -226,6 +351,18 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--type",
+        dest="types",
+        default=None,
+        help=(
+            "Composable project type overlay(s), comma-separated. "
+            f"Supported: {', '.join(sorted(SUPPORTED_TYPE_PROFILES))}. "
+            "Each overlay adds a .gitignore fragment and a fill-in stack-notes "
+            "stub; unity also adds a workflow handoff doc. Overlays ship no live "
+            "config with a baked-in tool/port. Types compose, e.g. --type python,web."
+        ),
+    )
+    parser.add_argument(
         "--minimal",
         action="store_true",
         help=(
@@ -250,6 +387,7 @@ def main() -> None:
     script_dir = Path(__file__).resolve().parent
     source = (script_dir / args.source).resolve()
     target = resolve_target(script_dir, args.target, args.name)
+    types = parse_type_profiles(args.types)
 
     copy_template(source, target, overwrite=args.overwrite)
     promoted_shims = configure_agent_profile(target, args.agent)
@@ -258,20 +396,31 @@ def main() -> None:
     if args.minimal:
         removed_paths = apply_minimal_profile(target, promoted_shims)
 
+    # Type overlays run last so their seeded files survive --minimal pruning.
+    type_paths: list[str] = []
+    if types:
+        type_paths = apply_type_profiles(target, script_dir, types)
+
     print(f"Created project template copy at: {target}")
     print(f"Copied from: {source}")
     print(f"Agent profile: {args.agent}")
+    print(f"Project type(s): {', '.join(types) if types else 'none'}")
     print(f"Minimal: {'yes' if args.minimal else 'no'}")
 
     if promoted_shims:
-        print(f"Promoted agent shim files: {', '.join(promoted_shims)}")
+        print(f"Promoted agent shim/config files: {', '.join(promoted_shims)}")
     else:
-        print("Promoted agent shim files: none")
+        print("Promoted agent shim/config files: none")
 
     if args.minimal:
         print(f"Pruned {len(removed_paths)} scaffolding file(s) for minimal profile:")
         for removed in removed_paths:
             print(f"  - {removed}")
+
+    if types:
+        print(f"Applied {len(type_paths)} type-overlay path(s):")
+        for applied in type_paths:
+            print(f"  - {applied}")
 
     if args.agent == "generic":
         print("Next: open the new project folder and start from AGENTS.md and PROMPT_START.md.")

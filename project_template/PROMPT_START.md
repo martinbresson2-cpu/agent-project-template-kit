@@ -19,16 +19,10 @@ Your job is to bootstrap the project correctly before writing much code.
 
 ## Very important template rule
 
-This template intentionally contains **more files and folders than the project may need**.
-
-You must actively prune it.
-
-Do not keep unnecessary template files "for later" unless there is a strong reason.
-Reducing irrelevant files saves tokens and keeps the repo easier to operate.
-
-If you are unsure whether something is needed:
-- ask,
-- or keep it temporarily but explicitly mark it as provisional and list it for review.
+This template intentionally ships **more files than the project may need**, so
+you must actively prune it — see **Template bootstrap rule** in `AGENTS.md` for
+the why and the how. If you are unsure whether something is needed: ask, or keep
+it temporarily but explicitly mark it provisional and list it for review.
 
 ## First tasks
 
@@ -65,19 +59,11 @@ Once the project is understood:
 - keep the structure lean.
 
 ### 4. Fill the core files
-Create or update at least:
-- `README.md`
-- `AGENTS.md`
-- `docs/roadmap/current_feature.md`
-- `docs/roadmap/next_phase.md`
-- `docs/fixes/fixes_log.md`
-
-Also update these if relevant:
-- `docs/design/architecture.md`
-- `docs/design/decisions.md`
-- `docs/product/vision.md`
-- `docs/product/scope.md`
-- `docs/workflow/human_handoff.md`
+Populate at least the always-present docs (`README.md`, `AGENTS.md`,
+`current_feature.md`, `next_phase.md`, `fixes_log.md`), and create any optional
+canonical docs this project needs. `AGENTS.md` → **Canonical file ownership**
+lists every doc and what it owns; use those exact paths rather than re-listing
+them here.
 
 ### 5. Establish the first execution plan
 Define:

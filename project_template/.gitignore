@@ -4,6 +4,9 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Claude Code (keep shared settings.json; ignore machine-local overrides)
+.claude/settings.local.json
+
 # Python
 __pycache__/
 .pytest_cache/

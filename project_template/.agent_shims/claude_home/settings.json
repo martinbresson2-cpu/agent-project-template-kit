@@ -1,0 +1,14 @@
+{
+  "$comment": "Starter Claude Code project settings. Safe, read-only defaults so common inspection commands do not prompt every time. Add project-specific allows as you go. Machine-local overrides belong in settings.local.json (git-ignored), not here.",
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Read(*)"
+    ],
+    "deny": []
+  }
+}

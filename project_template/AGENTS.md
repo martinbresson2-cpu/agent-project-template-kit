@@ -14,6 +14,11 @@ It is intentionally short and procedural. It should point to deeper docs rather 
 4. Read any additional file only if the current task requires it
 5. Do not start broad exploratory reading unless explicitly asked
 
+Your roadmap, fixes, and decisions docs are your **structured memory**, not
+paperwork: read them first at session start, and write the new truth back to
+them last before finishing. Reconstruct state from these files — never from
+chat history.
+
 If this is a **new project created from the template**, also read:
 - `PROMPT_START.md`
 - `README.md`
@@ -93,13 +98,25 @@ create that canonical file at the path above rather than scattering it elsewhere
 
 ---
 
-## Working style
+## Working style and loop
 
-- Prefer one active workstream at a time.
-- Break large work into explicit phases or milestones.
-- Keep implementation aligned with written architecture and roadmap.
+- Prefer one active workstream at a time; break large work into explicit phases.
+- Work in the smallest coherent slice: one clear outcome, only the files it
+  needs, verifiable, leaving the repo valid. Avoid speculative abstraction and
+  unrelated cleanup.
+- Keep implementation aligned with the written architecture and roadmap.
+- Resolve uncertainty by kind:
+  - **Technical** — investigate narrowly (relevant source, nearby tests, config,
+    a targeted search), don't guess.
+  - **Product / UX / scope** — ask the human; do not silently decide.
+  - **Architectural** (boundaries, ownership, interfaces, long-term constraints)
+    — state the options and trade-offs, get approval if needed, then record it
+    in `docs/design/decisions.md` and update `docs/design/architecture.md`.
+  - **Low-risk and reversible** — pick the simplest reasonable default.
+- Verify with the narrowest relevant check first (targeted tests, a focused run,
+  lint/type). If something cannot be verified, say what was not checked, why, the
+  remaining risk, and any human action needed.
 - Surface uncertainty early.
-- Ask before making product, UX, scope, or business decisions that are not obvious technical consequences.
 
 ---
 
@@ -148,13 +165,7 @@ If commit behavior should be automatic in this repo, document that explicitly in
 
 ## If this is a brand-new project from the template
 
-Your first job is not coding.
-
-Your first job is to:
-1. understand the project,
-2. prune the template,
-3. establish the roadmap and architecture skeleton,
-4. define the first active feature,
-5. only then begin implementation.
-
-See `PROMPT_START.md`.
+Your first job is not coding — it is to bootstrap: understand the project, prune
+the template (see **Template bootstrap rule** above), establish the roadmap and
+architecture skeleton, define the first active feature, then begin
+implementation. `PROMPT_START.md` is the step-by-step first prompt.

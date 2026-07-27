@@ -12,13 +12,14 @@ agent-project-template-kit/
 ├── README.md                # This guide: maintaining and using the kit
 ├── AGENTS.md                # Instructions for agents working on the kit itself
 ├── create_template_repo.py  # Generates a new project from project_template/
+├── profiles/                # Composable per-type overlays (web/mobile/unity/python)
 └── project_template/        # Starter payload copied into each generated project
     ├── README.md            # Starting README to customize per project
     ├── AGENTS.md            # Canonical operating instructions for generated projects
     ├── PROMPT_START.md      # Bootstrap prompt for a freshly generated project
-    ├── .agent_shims/        # Tool-specific entrypoints promoted at generation time
+    ├── .agent_shims/        # Tool-specific entrypoints + .claude/ seed, promoted at generation
     ├── docs/                # design / fixes / product / roadmap / workflow docs
-    └── scripts/             # Scripts copied into generated projects
+    └── scripts/             # export_project.py, copied into projects
 ```
 
 The similarly named root and template files serve different scopes:
@@ -40,16 +41,45 @@ python create_template_repo.py ../my_new_project --agent claude
 python create_template_repo.py ../my_new_project --agent gemini
 python create_template_repo.py ../my_new_project --agent multi-agent
 python create_template_repo.py ../my_new_project --agent claude --minimal
+python create_template_repo.py ../my_new_project --agent claude --type python,web
+python create_template_repo.py ../my_new_project --type unity
 ```
+
+`--agent`, `--type`, and `--minimal` are orthogonal and combine freely.
 
 ### `--agent` — which entrypoints ship
 
 | Profile | Result |
 | --- | --- |
 | `generic` (default) | `AGENTS.md` only, no tool-specific shims |
-| `claude` | `AGENTS.md` + `CLAUDE.md` |
+| `claude` | `AGENTS.md` + `CLAUDE.md` + a starter `.claude/settings.json` |
 | `gemini` | `AGENTS.md` + `GEMINI.md` |
-| `multi-agent` | `AGENTS.md` + every available shim |
+| `multi-agent` | `AGENTS.md` + every shim + the `.claude/` seed |
+
+### `--type` — composable project-type overlays
+
+Project type is rarely the *whole* project — it's usually a layer (a web
+dashboard on a Python backend, a mobile app built with web tech). So `--type`
+is **composable**: pass one or more comma-separated types and each overlay is
+applied in turn.
+
+| Type | Adds |
+| --- | --- |
+| `web` | web `.gitignore` lines, `docs/design/stack_web.md` |
+| `mobile` | mobile/native `.gitignore` lines, `docs/design/stack_mobile.md` |
+| `unity` | Unity `.gitignore` lines, `docs/design/stack_unity.md`, `docs/workflow/unity_handoff.md` |
+| `python` | Python `.gitignore` lines, `docs/design/stack_python.md` |
+
+Overlays compose cleanly: `.gitignore` fragments append and per-type stack notes
+never collide. Deliberately, **an overlay ships only ignore rules and
+fill-in-the-blank prose — never a live config with a tool, framework, or port
+baked in** (that is a decision the project makes, not the template; a stack stub
+documents the run command as a blank to fill). Example mappings from real
+projects: a Python automation tool with a dashboard is `--type python,web`; a
+web-tech mobile app is `--type mobile,web`; a Unity game is `--type unity`.
+
+To add a new type, drop a `profiles/<name>/` folder (a `gitignore.append` and/or
+a `files/` tree) and add the name to `SUPPORTED_TYPE_PROFILES` in the generator.
 
 ### `--minimal` — for small projects
 
@@ -58,9 +88,16 @@ python create_template_repo.py ../my_new_project --agent claude --minimal
 ```text
 .gitignore  README.md  AGENTS.md  PROMPT_START.md
 docs/roadmap/current_feature.md  docs/roadmap/next_phase.md  docs/fixes/fixes_log.md
+scripts/export_project.py
 ```
 
-It deletes the `design/`, `product/`, `workflow/`, `roadmap/archive.md`, and `scripts/` scaffolding — files a small project would otherwise prune by hand. Any promoted agent shim is kept, so `--minimal` combines freely with `--agent`. Create those extra docs later, from their canonical description in `AGENTS.md`, if and when the project grows into them.
+It deletes the `design/`, `product/`, `workflow/`, and `roadmap/archive.md`
+scaffolding — files a small project would otherwise prune by hand. The
+repo-snapshot tool (`scripts/export_project.py`), any promoted agent shim, and
+the `.claude/` seed are all kept. Type overlays run *after* pruning, so
+`--minimal --type unity` still gets its stack notes and handoff doc. Create the
+extra docs later, from their canonical description in `AGENTS.md`, if and when
+the project grows into them.
 
 ## After generation
 

@@ -62,6 +62,18 @@ Optional (a minimal setup omits these; create them when the project needs them):
 - `docs/design/decisions.md` — important decisions and rationale
 - `docs/workflow/human_handoff.md` — required manual human actions
 
+## Scripts
+
+- `scripts/export_project.py` — write a single-file text snapshot of the repo
+  (`project_snapshot.txt`) to paste into an LLM; excludes secrets, deps, and
+  binaries. Cross-platform, no dependencies.
+
+## Type notes
+
+If this project was generated with `--type`, a `docs/design/stack_<type>.md`
+stub captures the stack and everyday commands common to that type. Fill it in;
+project-specific structure still belongs in `docs/design/architecture.md`.
+
 ## Template philosophy
 
 This template favors:
