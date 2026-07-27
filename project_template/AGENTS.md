@@ -87,6 +87,10 @@ Use these files consistently.
 
 If a fact belongs somewhere, record it once in the correct place.
 
+Not every file above ships in every project — a minimal setup starts with only
+the roadmap and fixes docs. When a fact needs a home that does not exist yet,
+create that canonical file at the path above rather than scattering it elsewhere.
+
 ---
 
 ## Working style

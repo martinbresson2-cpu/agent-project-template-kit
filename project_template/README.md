@@ -49,12 +49,15 @@ When creating a new project from this template:
 
 ## Core files
 
+Always present:
 - `AGENTS.md` — main operating instructions for the agent
 - `PROMPT_START.md` — first prompt for bootstrap
 - `docs/roadmap/current_feature.md` — the single active workstream
 - `docs/roadmap/next_phase.md` — upcoming milestones
-- `docs/roadmap/archive.md` — completed work
 - `docs/fixes/fixes_log.md` — outstanding bugs and issues
+
+Optional (a minimal setup omits these; create them when the project needs them):
+- `docs/roadmap/archive.md` — completed work
 - `docs/design/architecture.md` — technical structure and boundaries
 - `docs/design/decisions.md` — important decisions and rationale
 - `docs/workflow/human_handoff.md` — required manual human actions

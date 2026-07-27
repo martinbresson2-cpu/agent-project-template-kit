@@ -71,7 +71,11 @@ python create_template_repo.py ../my_new_project --agent generic
 python create_template_repo.py ../my_new_project --agent claude
 python create_template_repo.py ../my_new_project --agent gemini
 python create_template_repo.py ../my_new_project --agent multi-agent
+python create_template_repo.py ../my_new_project --agent claude --minimal
 ```
+
+`--agent` selects which entrypoint shims ship; `--minimal` prunes the payload to
+a lean core for small projects. They are orthogonal and combine freely.
 
 Then open the new project folder and follow its local:
 - `AGENTS.md`

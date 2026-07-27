@@ -25,31 +25,12 @@ That lives in `docs/roadmap/current_feature.md`.
 
 ## 1. Start the session
 
-Read only:
-1. `docs/roadmap/current_feature.md`
-2. `docs/fixes/fixes_log.md`
-3. `docs/roadmap/next_phase.md` (skim only)
-
-Then read any additional file only if the task needs it.
-
-Do not start with a broad repo scan.
+Follow the session-start and template-bootstrap steps in `AGENTS.md`.
+This file does not restate them.
 
 ---
 
-## 2. Check whether this is still template bootstrap
-
-If this repository still looks like a fresh template copy:
-- follow `PROMPT_START.md`
-- understand the real project
-- prune unnecessary template files/folders
-- populate the retained core docs
-- define the first real active workstream
-
-Do not keep irrelevant scaffolding just because it exists.
-
----
-
-## 3. Reconstruct the active state
+## 2. Reconstruct the active state
 
 Before coding, identify:
 - the current goal
@@ -64,7 +45,7 @@ If `docs/roadmap/current_feature.md` is stale, update it before substantial work
 
 ---
 
-## 4. Work in the smallest coherent slice
+## 3. Work in the smallest coherent slice
 
 A good slice:
 - has one clear outcome
@@ -76,7 +57,7 @@ Avoid speculative abstraction and unrelated cleanup unless required.
 
 ---
 
-## 5. Resolve uncertainty correctly
+## 4. Resolve uncertainty correctly
 
 ### Technical uncertainty
 Investigate narrowly:
@@ -102,7 +83,7 @@ Use the simplest reasonable default.
 
 ---
 
-## 6. Implement
+## 5. Implement
 
 While implementing:
 - change only what the slice requires
@@ -116,7 +97,7 @@ If the plan turns out to be wrong, revise it instead of pushing through on bad a
 
 ---
 
-## 7. Verify
+## 6. Verify
 
 Use the narrowest relevant verification first:
 - targeted tests
@@ -132,7 +113,7 @@ If something cannot be verified, say:
 
 ---
 
-## 8. Update canonical files
+## 7. Update canonical files
 
 Update only the files affected by the new truth.
 
@@ -147,7 +128,7 @@ Do not duplicate the same status across multiple files.
 
 ---
 
-## 9. Request human action when needed
+## 8. Request human action when needed
 
 If the next step requires human action, use `docs/workflow/human_handoff.md`.
 
@@ -163,7 +144,7 @@ Keep handoffs small and explicit.
 
 ---
 
-## 10. End the session cleanly
+## 9. End the session cleanly
 
 Before finishing, make sure:
 - the active slice is reflected in code and docs

@@ -39,6 +39,19 @@ AGENT_PROFILE_TO_SHIM = {
     "gemini": "GEMINI.md",
 }
 
+# The lean core kept when --minimal is used. Everything else in the template
+# payload is pruned so small projects start with less to read and delete.
+# Promoted agent shims (CLAUDE.md, GEMINI.md, ...) are always kept as well.
+MINIMAL_KEEP_PATHS = {
+    ".gitignore",
+    "README.md",
+    "AGENTS.md",
+    "PROMPT_START.md",
+    "docs/roadmap/current_feature.md",
+    "docs/roadmap/next_phase.md",
+    "docs/fixes/fixes_log.md",
+}
+
 
 def ignore_filter(_directory: str, names: list[str]) -> set[str]:
     ignored: set[str] = set()
@@ -145,6 +158,36 @@ def configure_agent_profile(target: Path, agent: str) -> list[str]:
     return promoted_shims
 
 
+def apply_minimal_profile(target: Path, keep_extra: list[str]) -> list[str]:
+    """
+    Prune the generated project down to a lean core for small projects.
+
+    Deletes the over-provisioned scaffolding (design, product, workflow,
+    archive, and scripts) and keeps only the files most projects need on
+    day one, plus any promoted agent shims. Empty directories left behind
+    are removed. Returns the sorted list of removed project-relative paths.
+    """
+    keep = MINIMAL_KEEP_PATHS | set(keep_extra)
+    removed: list[str] = []
+
+    # Sort deepest-first so files are unlinked before we check their parent
+    # directories for emptiness.
+    for path in sorted(target.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir():
+            if not any(path.iterdir()):
+                path.rmdir()
+            continue
+
+        relative_path = path.relative_to(target).as_posix()
+        if relative_path in keep:
+            continue
+
+        path.unlink()
+        removed.append(relative_path)
+
+    return sorted(removed)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Create a fresh project by copying the maintained template repo."
@@ -183,6 +226,17 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--minimal",
+        action="store_true",
+        help=(
+            "Prune the generated project to a lean core for small projects: "
+            "AGENTS.md, README.md, PROMPT_START.md, current_feature.md, "
+            "next_phase.md, fixes_log.md, and any agent shim. Deletes the "
+            "design, product, workflow, archive, and scripts scaffolding. "
+            "Combine with --agent as usual."
+        ),
+    )
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="Replace the target directory if it already exists.",
@@ -200,14 +254,24 @@ def main() -> None:
     copy_template(source, target, overwrite=args.overwrite)
     promoted_shims = configure_agent_profile(target, args.agent)
 
+    removed_paths: list[str] = []
+    if args.minimal:
+        removed_paths = apply_minimal_profile(target, promoted_shims)
+
     print(f"Created project template copy at: {target}")
     print(f"Copied from: {source}")
     print(f"Agent profile: {args.agent}")
+    print(f"Minimal: {'yes' if args.minimal else 'no'}")
 
     if promoted_shims:
         print(f"Promoted agent shim files: {', '.join(promoted_shims)}")
     else:
         print("Promoted agent shim files: none")
+
+    if args.minimal:
+        print(f"Pruned {len(removed_paths)} scaffolding file(s) for minimal profile:")
+        for removed in removed_paths:
+            print(f"  - {removed}")
 
     if args.agent == "generic":
         print("Next: open the new project folder and start from AGENTS.md and PROMPT_START.md.")
