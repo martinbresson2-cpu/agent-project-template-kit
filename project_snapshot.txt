@@ -1,0 +1,2315 @@
+PROJECT SNAPSHOT
+================================================================================
+
+Project folder: agent-project-template-kit
+Number of included files: 20
+
+PROJECT STRUCTURE
+================================================================================
+agent-project-template-kit/
+├── CLAUDE.MD
+├── create_template_repo.py
+├── export_project.py
+├── project_template
+│   ├── .gitignore
+│   ├── CLAUDE.md
+│   ├── docs
+│   │   ├── design
+│   │   │   ├── architecture.md
+│   │   │   ├── data_schema.md
+│   │   │   └── decisions.md
+│   │   ├── fixes
+│   │   │   └── fixes_log.md
+│   │   ├── product
+│   │   │   ├── scope.md
+│   │   │   └── vision.md
+│   │   ├── roadmap
+│   │   │   ├── archive.md
+│   │   │   ├── current_feature.md
+│   │   │   └── next_phase.md
+│   │   └── workflow
+│   │       ├── agent_workflow.md
+│   │       └── human_handoff.md
+│   ├── PROMPT_START.md
+│   ├── README.md
+│   └── scripts
+│       └── check_requirements.sh
+└── README.md
+
+FILE CONTENTS
+================================================================================
+
+################################################################################
+FILE: CLAUDE.MD
+################################################################################
+
+# CLAUDE.md
+
+# Agent Operating Guide
+
+This file is the main operating contract for AI-assisted work in this project.
+
+It is intentionally short and procedural.
+
+---
+
+## Session start — do this first every time
+
+1. Read `docs/roadmap/current_feature.md`
+2. Read `docs/fixes/fixes_log.md`
+3. Skim `docs/roadmap/next_phase.md`
+4. Read any additional file only if the current task requires it
+5. Do not start broad exploratory reading unless explicitly asked
+
+If this project still appears to be a fresh template copy, also read:
+- `PROMPT_START.md`
+- `README.md`
+
+---
+
+## Template bootstrap rule
+
+If this repository is still a new copy of the project template, the first setup pass must:
+1. identify which files and folders are actually useful,
+2. keep and fill the needed ones,
+3. delete the unnecessary template scaffolding.
+
+Do not keep irrelevant template files just in case.
+
+---
+
+## Context discipline
+
+### Reading rules
+- Read narrowly, not broadly.
+- Prefer the smallest file that answers the question.
+- Do not inspect files just in case.
+
+### Writing rules
+- Lead with the answer or result.
+- Be concise unless more detail is needed.
+- Avoid repeating the same fact across multiple files.
+- Update the canonical file instead of scattering the same information.
+
+---
+
+## Canonical file ownership
+
+- `docs/roadmap/current_feature.md` — single active workstream
+- `docs/roadmap/next_phase.md` — future milestones
+- `docs/roadmap/archive.md` — completed work
+- `docs/fixes/fixes_log.md` — unresolved bugs and issues
+- `docs/design/architecture.md` — current technical structure
+- `docs/design/decisions.md` — important decisions and rationale
+- `docs/workflow/human_handoff.md` — human-required actions
+
+Record a fact once in the right place.
+
+---
+
+## Working style
+
+- Prefer one active workstream at a time.
+- Break large work into explicit phases or milestones.
+- Keep implementation aligned with architecture and roadmap.
+- Surface uncertainty early.
+- Ask before making non-obvious product, UX, scope, or business decisions.
+
+---
+
+## Hard rules
+
+1. Do not silently make major product decisions.
+2. Do not mark work as shipped without explicit user signoff.
+3. Do not duplicate the same status narrative across multiple files.
+4. Do not leave resolved bugs cluttering the fixes log.
+5. Do not preserve template files that the project clearly does not need.
+6. Do not mix authored source-of-truth files with generated artifacts.
+7. If architecture changes, update `docs/design/architecture.md`.
+8. If priorities change, update `docs/roadmap/current_feature.md` and, if needed, `docs/roadmap/next_phase.md`.
+9. If a manual step is required, document it clearly in `docs/workflow/human_handoff.md`.
+10. Prefer deterministic, testable changes where practical.
+
+---
+
+## Definition of done
+
+A task or feature is not done until, as appropriate:
+- implementation is complete,
+- tests pass,
+- docs are updated,
+- manual steps are documented,
+- the current feature file reflects the new truth,
+- and the user has signed off if required.
+
+Do not self-upgrade implemented into shipped.
+
+---
+
+## If this is a brand-new project from the template
+
+Your first job is not coding.
+
+Your first job is to:
+1. understand the project,
+2. prune the template,
+3. establish the roadmap and architecture skeleton,
+4. define the first active feature,
+5. only then begin implementation.
+
+See `PROMPT_START.md`.
+
+################################################################################
+FILE: create_template_repo.py
+################################################################################
+
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import shutil
+from pathlib import Path
+
+
+DEFAULT_SOURCE_DIR = "MY_TEMPLATE_REPO"
+
+EXCLUDED_DIRECTORIES = {
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+}
+
+EXCLUDED_FILENAMES = {
+    ".DS_Store",
+    "project_snapshot.txt",
+}
+
+
+def ignore_filter(_directory: str, names: list[str]) -> set[str]:
+    ignored: set[str] = set()
+
+    for name in names:
+        if name in EXCLUDED_DIRECTORIES or name in EXCLUDED_FILENAMES:
+            ignored.add(name)
+
+    return ignored
+
+
+def copy_template(source: Path, target: Path, overwrite: bool) -> None:
+    if not source.exists() or not source.is_dir():
+        raise SystemExit(f"Source template directory not found: {source}")
+
+    if target.exists():
+        if not overwrite:
+            raise SystemExit(
+                f"Target already exists: {target}\n"
+                "Use --overwrite to replace it."
+            )
+        shutil.rmtree(target)
+
+    shutil.copytree(source, target, ignore=ignore_filter)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Create a fresh project by copying the maintained template repo."
+    )
+    parser.add_argument(
+        "target",
+        help="Target directory for the new project copy.",
+    )
+    parser.add_argument(
+        "--source",
+        default=DEFAULT_SOURCE_DIR,
+        help=f"Template source directory. Defaults to {DEFAULT_SOURCE_DIR}.",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace the target directory if it already exists.",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+
+    script_dir = Path(__file__).resolve().parent
+    source = (script_dir / args.source).resolve()
+    target = Path(args.target).resolve()
+
+    copy_template(source, target, overwrite=args.overwrite)
+
+    print(f"Created project template copy at: {target}")
+    print(f"Copied from: {source}")
+
+
+if __name__ == "__main__":
+    main()
+
+################################################################################
+FILE: export_project.py
+################################################################################
+
+from pathlib import Path
+import argparse
+import os
+
+
+EXCLUDED_DIRECTORIES = {
+    ".git",
+    ".idea",
+    ".vscode",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+}
+
+EXCLUDED_FILENAMES = {
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.development",
+    "credentials.json",
+    "secrets.json",
+    "service-account.json",
+    "project_snapshot.txt",
+}
+
+EXCLUDED_EXTENSIONS = {
+    ".db",
+    ".sqlite",
+    ".sqlite3",
+    ".pyc",
+    ".pyo",
+    ".pyd",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".exe",
+    ".bin",
+    ".zip",
+    ".tar",
+    ".gz",
+    ".7z",
+    ".rar",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".ico",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".mp3",
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".woff",
+    ".woff2",
+    ".ttf",
+}
+
+MAX_FILE_SIZE = 300_000  # 300 KB per file
+
+
+def is_excluded(path: Path) -> bool:
+    if any(part in EXCLUDED_DIRECTORIES for part in path.parts):
+        return True
+    if path.name in EXCLUDED_FILENAMES:
+        return True
+    if path.suffix.lower() in EXCLUDED_EXTENSIONS:
+        return True
+    return False
+
+
+def get_project_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+
+    for current_root, directories, filenames in os.walk(root):
+        current_path = Path(current_root)
+
+        directories[:] = sorted(
+            d for d in directories
+            if d not in EXCLUDED_DIRECTORIES
+        )
+
+        for filename in sorted(filenames):
+            file_path = current_path / filename
+            relative_path = file_path.relative_to(root)
+
+            if not is_excluded(relative_path):
+                files.append(relative_path)
+
+    return sorted(files, key=lambda path: str(path).lower())
+
+
+def build_tree(files: list[Path]) -> str:
+    tree: dict = {}
+
+    for file_path in files:
+        current = tree
+        for part in file_path.parts:
+            current = current.setdefault(part, {})
+
+    lines: list[str] = []
+
+    def add_nodes(node: dict, prefix: str = "") -> None:
+        entries = sorted(node.items(), key=lambda item: item[0].lower())
+
+        for index, (name, children) in enumerate(entries):
+            is_last = index == len(entries) - 1
+            connector = "└── " if is_last else "├── "
+            lines.append(prefix + connector + name)
+
+            if children:
+                extension = "    " if is_last else "│   "
+                add_nodes(children, prefix + extension)
+
+    add_nodes(tree)
+    return "\n".join(lines)
+
+
+def read_text_file(path: Path) -> tuple[str | None, str | None]:
+    try:
+        size = path.stat().st_size
+    except OSError as error:
+        return None, f"Could not inspect file: {error}"
+
+    if size > MAX_FILE_SIZE:
+        return None, f"Skipped because file is larger than {MAX_FILE_SIZE:,} bytes."
+
+    try:
+        content = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        try:
+            content = path.read_text(encoding="latin-1")
+        except Exception as error:
+            return None, f"Could not decode file: {error}"
+    except Exception as error:
+        return None, f"Could not read file: {error}"
+
+    if not content.strip():
+        return "", None
+
+    return content, None
+
+
+def export_project(root: Path, output_path: Path, structure_only: bool) -> None:
+    files = get_project_files(root)
+
+    with output_path.open("w", encoding="utf-8") as output:
+        output.write("PROJECT SNAPSHOT\n")
+        output.write("=" * 80 + "\n\n")
+        output.write(f"Project folder: {root.name}\n")
+        output.write(f"Number of included files: {len(files)}\n\n")
+
+        output.write("PROJECT STRUCTURE\n")
+        output.write("=" * 80 + "\n")
+        output.write(f"{root.name}/\n")
+
+        tree = build_tree(files)
+        output.write(tree if tree else "(No files found)")
+        output.write("\n\n")
+
+        if structure_only:
+            return
+
+        output.write("FILE CONTENTS\n")
+        output.write("=" * 80 + "\n")
+
+        wrote_any_content = False
+
+        for relative_path in files:
+            full_path = root / relative_path
+            content, error = read_text_file(full_path)
+
+            if error:
+                continue
+
+            if content == "":
+                continue
+
+            wrote_any_content = True
+            output.write("\n")
+            output.write("#" * 80 + "\n")
+            output.write(f"FILE: {relative_path.as_posix()}\n")
+            output.write("#" * 80 + "\n\n")
+            output.write(content)
+            if not content.endswith("\n"):
+                output.write("\n")
+
+        if not wrote_any_content:
+            output.write("\n[No non-empty readable text files found]\n")
+
+    print(f"Snapshot created: {output_path}")
+    print(f"Included {len(files)} files in the project structure.")
+    print("Included contents only for non-empty readable text files.")
+    print("Skipped secrets, binaries, excluded directories, and oversized files.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Export a safe text snapshot of a local project."
+    )
+    parser.add_argument(
+        "project_directory",
+        nargs="?",
+        default=".",
+        help="Project directory to scan. Defaults to the current directory.",
+    )
+    parser.add_argument(
+        "--output",
+        default="project_snapshot.txt",
+        help="Name or path of the generated text file.",
+    )
+    parser.add_argument(
+        "--structure-only",
+        action="store_true",
+        help="Export only the project structure, without file contents.",
+    )
+
+    args = parser.parse_args()
+
+    root = Path(args.project_directory).resolve()
+    output_path = Path(args.output).resolve()
+
+    if not root.exists():
+        raise SystemExit(f"Project directory does not exist: {root}")
+
+    if not root.is_dir():
+        raise SystemExit(f"Provided path is not a directory: {root}")
+
+    export_project(root, output_path, args.structure_only)
+
+
+if __name__ == "__main__":
+    main()
+
+################################################################################
+FILE: project_template/.gitignore
+################################################################################
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+*.py[cod]
+
+# Node / frontend
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local databases / binaries / archives
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.zip
+*.tar
+*.gz
+*.7z
+*.rar
+
+# Generated exports / snapshots
+project_snapshot.txt
+
+################################################################################
+FILE: project_template/CLAUDE.md
+################################################################################
+
+# Agent Operating Guide
+
+This file is the main operating contract for AI-assisted work in this repository.
+
+It is intentionally short and procedural. It should point to deeper docs rather than duplicate them.
+
+---
+
+## Session start — do this first every time
+
+1. Read `docs/roadmap/current_feature.md`
+2. Read `docs/fixes/fixes_log.md`
+3. Skim `docs/roadmap/next_phase.md`
+4. Read any additional file only if the current task requires it
+5. Do not start broad exploratory reading unless explicitly asked
+
+If this is a **new project created from the template**, also read:
+- `PROMPT_START.md`
+- `README.md`
+
+---
+
+## Template bootstrap rule
+
+This repository may begin as a copy of a generic template.
+
+If so, the first setup pass must:
+1. identify which template files/folders are actually useful for this project,
+2. keep and fill the needed ones,
+3. **delete the unnecessary ones**.
+
+Do not leave irrelevant template scaffolding in place "just in case".
+
+Reason:
+- it wastes tokens,
+- creates context noise,
+- makes navigation worse,
+- increases maintenance burden.
+
+When deleting template leftovers, preserve only what the project realistically needs.
+
+---
+
+## Context discipline
+
+Tokens are a resource. Spend them carefully.
+
+### Reading rules
+- Read narrowly, not broadly.
+- Prefer the smallest file that answers the question.
+- Do not repeatedly reread the same long documents in full.
+- Do not inspect files "just in case".
+- For structured data questions, prefer targeted inspection over full-file reading when possible.
+
+### Writing rules
+- Lead with the answer or result.
+- Be concise unless detail is needed.
+- Avoid repeating the same fact in multiple docs.
+- Update the canonical file for a fact instead of scattering the same information around the repo.
+
+---
+
+## Canonical file ownership
+
+Use these files consistently.
+
+- `docs/roadmap/current_feature.md`  
+  The single active workstream, current status, exact next actions, open blockers.
+
+- `docs/roadmap/next_phase.md`  
+  Milestones, queued work, future phases.
+
+- `docs/roadmap/archive.md`  
+  Completed/shipped items only.
+
+- `docs/fixes/fixes_log.md`  
+  Outstanding bugs/issues only. Remove resolved items rather than keeping long tombstones.
+
+- `docs/design/architecture.md`  
+  Current system design, technical structure, boundaries.
+
+- `docs/design/decisions.md`  
+  Important decisions and why they were made.
+
+- `docs/workflow/human_handoff.md`  
+  Manual actions required from the human.
+
+If a fact belongs somewhere, record it once in the correct place.
+
+---
+
+## Working style
+
+- Prefer one active workstream at a time.
+- Break large work into explicit phases or milestones.
+- Keep implementation aligned with written architecture and roadmap.
+- Surface uncertainty early.
+- Ask before making product, UX, scope, or business decisions that are not obvious technical consequences.
+
+---
+
+## Hard rules
+
+1. Do not silently make major product decisions.
+2. Do not mark work as shipped without explicit user signoff.
+3. Do not duplicate the same status narrative across multiple files.
+4. Do not leave resolved bugs cluttering the fixes log.
+5. Do not preserve template files that the project clearly does not need.
+6. Do not mix authored source-of-truth files with generated artifacts.
+7. If architecture changes, update `docs/design/architecture.md`.
+8. If priorities change, update `docs/roadmap/current_feature.md` and, if needed, `docs/roadmap/next_phase.md`.
+9. If a manual step is required, write it clearly in `docs/workflow/human_handoff.md` or provide a task card in chat.
+10. Prefer deterministic, testable changes wherever practical.
+
+---
+
+## Definition of done
+
+A task or feature is not done until, as appropriate:
+
+- implementation is complete,
+- tests pass,
+- docs are updated,
+- manual steps are documented,
+- the current feature file reflects the new truth,
+- and the user has signed off if this is a milestone or visible feature completion.
+
+Do not self-upgrade "implemented" into "shipped".
+
+---
+
+## Commit discipline
+
+If the user wants commit-driven progress tracking, commit at meaningful checkpoints:
+- after a coherent feature slice,
+- after a milestone step,
+- after a roadmap/doc state change paired with code changes.
+
+Keep commit messages specific and useful.
+
+If commit behavior should be automatic in this repo, document that explicitly in this file or in project-specific workflow docs.
+
+---
+
+## If this is a brand-new project from the template
+
+Your first job is not coding.
+
+Your first job is to:
+1. understand the project,
+2. prune the template,
+3. establish the roadmap and architecture skeleton,
+4. define the first active feature,
+5. only then begin implementation.
+
+See `PROMPT_START.md`.
+
+################################################################################
+FILE: project_template/docs/design/architecture.md
+################################################################################
+
+# docs/design/architecture.md
+
+# Architecture
+
+> Canonical description of the system's current technical structure.
+> Keep this file short, current, and practical.
+> Delete it during template bootstrap if the project is too small to need it.
+
+---
+
+## Purpose
+
+Describe the system in technical terms only:
+- what it does
+- what the main runtime or deliverable is
+- what the key technical constraint is
+
+Keep this brief.
+
+---
+
+## System overview
+
+Replace this with the actual project flow.
+
+    User / Caller
+      -> Entry point
+      -> Application logic
+      -> Data / external systems
+      -> Output
+
+---
+
+## Main components
+
+Document only meaningful components.
+
+### `<component>`
+
+- **Owns:** ...
+- **Inputs:** ...
+- **Outputs:** ...
+- **Depends on:** ...
+- **Location:** ...
+- **Does not own:** ...
+
+Repeat only as needed.
+
+---
+
+## Boundary rules
+
+List the few rules that matter.
+
+- `...` may depend on `...`
+- `...` must not depend on `...`
+- Business logic must not live in `...`
+- External integrations must stay behind `...`
+- Generated artifacts must stay separate from authored source
+
+Delete rules that do not apply.
+
+---
+
+## Data flow
+
+Describe the main flow in 3–6 steps.
+
+1. ...
+2. ...
+3. ...
+4. ...
+
+If there is an important alternative flow, add it briefly.
+
+---
+
+## State and persistence
+
+- **Source of truth:** ...
+- **Persistent storage:** ...
+- **Transient state:** ...
+- **Ownership:** ...
+- **Consistency rules:** ...
+
+If this project has little or no meaningful state, say so briefly.
+
+---
+
+## External interfaces
+
+List only interfaces that matter architecturally.
+
+### `<interface>`
+
+- **Purpose:** ...
+- **Direction:** inbound / outbound
+- **Format:** API / CLI / file / event / library
+- **Owned by:** ...
+- **Failure behavior:** ...
+
+---
+
+## Repository map
+
+Only include directories needed for orientation.
+
+    <path>/    # responsibility
+    <path>/    # responsibility
+    <path>/    # responsibility
+
+Do not paste the whole repo tree.
+
+---
+
+## Constraints
+
+List current architectural constraints.
+
+- ...
+- ...
+- ...
+
+Only include constraints that implementation must respect now.
+
+---
+
+## Known gaps
+
+List architectural gaps relevant to current or near-term work.
+
+- ...
+- ...
+
+Do not use this for bugs or roadmap tasks.
+
+---
+
+## Update rule
+
+Update this file when:
+- component responsibilities change
+- dependency direction changes
+- data flow or state ownership changes
+- a significant interface is added or replaced
+- a constraint changes
+
+Significant rationale belongs in `docs/design/decisions.md`.
+
+################################################################################
+FILE: project_template/docs/design/data_schema.md
+################################################################################
+
+# Data Schema
+
+> Current data shapes, key entities, and ownership.
+> Keep this practical.
+> Delete this file during bootstrap if the project has little meaningful data structure.
+
+---
+
+## Purpose
+
+Use this file for the data model the project currently depends on:
+- key entities
+- important fields
+- relationships
+- ownership and validation rules
+
+Do not turn this into a full database spec unless the project truly needs that.
+
+---
+
+## How to use this file
+
+Document only data that matters to current or near-term work:
+- persisted entities
+- important request or response shapes
+- shared internal structures
+- versioned file formats
+
+Skip trivial DTOs and obvious one-off payloads.
+
+---
+
+## Entity template
+
+### `<entity or structure>`
+
+- **Purpose:** ...
+- **Source of truth:** ...
+- **Owned by:** ...
+- **Stored as:** DB table / file / API payload / in-memory / other
+- **Key fields:**
+  - `field_name`: type — meaning
+  - `field_name`: type — meaning
+- **Relations:** ...
+- **Validation rules:** ...
+- **Notes:** ...
+
+Repeat only as needed.
+
+---
+
+## Shared rules
+
+List only rules that multiple data structures depend on.
+
+- IDs are ...
+- Timestamps use ...
+- Nullable fields mean ...
+- Deletion behavior is ...
+- Versioning rule is ...
+
+Delete any rule that does not apply.
+
+---
+
+## Known gaps
+
+Only include data-shape gaps that affect implementation clarity.
+
+- ...
+- ...
+
+Do not track bugs or roadmap tasks here.
+
+---
+
+## Update rule
+
+Update this file when:
+- a core entity changes
+- a shared payload shape becomes important
+- validation or ownership rules change
+- persistence structure changes in a meaningful way
+
+Architecture belongs in `docs/design/architecture.md`.
+Decision rationale belongs in `docs/design/decisions.md`.
+
+################################################################################
+FILE: project_template/docs/design/decisions.md
+################################################################################
+
+# docs/design/decisions.md
+
+# Decisions
+
+> Canonical record of significant technical or structural decisions.
+> Keep entries short and useful.
+> Delete this file during template bootstrap if the project is too small to need it.
+
+---
+
+## Use this file for
+
+Record decisions that affect:
+- architecture
+- data ownership
+- dependencies
+- interfaces
+- testing strategy
+- deployment
+- long-term repository structure
+
+Do not use it for:
+- task status
+- bugs
+- feature ideas
+- temporary notes
+- implementation diary
+
+---
+
+## Status
+
+- **Proposed** — under consideration
+- **Accepted** — currently in effect
+- **Superseded** — replaced by a later decision
+- **Rejected** — considered and not adopted
+
+---
+
+## Index
+
+- `D-001` — `<title>` — `<status>`
+
+Remove the example line when real decisions exist.
+
+---
+
+## Entry template
+
+### D-XXX — `<short title>`
+
+- **Status:** Proposed
+- **Date:** YYYY-MM-DD
+- **Owners:** ...
+- **Related files:** `path/to/file`
+- **Supersedes:** None
+- **Superseded by:** None
+
+#### Context
+
+What problem or constraint required a decision?
+
+#### Decision
+
+We will ...
+
+#### Why
+
+Why this option was chosen.
+
+#### Alternatives considered
+
+- **`<option>`:** why not chosen
+- **`<option>`:** why not chosen
+
+Remove this section if not useful.
+
+#### Consequences
+
+- Positive: ...
+- Trade-off: ...
+- Follow-up: ...
+
+---
+
+## Active decisions
+
+Add accepted or proposed decisions below this heading.
+
+<!-- Add decisions here. -->
+
+---
+
+## Superseded or rejected decisions
+
+Move old entries here only if keeping them prevents confusion.
+
+---
+
+## Update rule
+
+Update this file when:
+- a significant decision is accepted
+- an earlier decision is replaced
+- a new constraint changes the reasoning
+- the project would likely re-argue the same choice later
+
+If a decision changes:
+1. keep the old entry if still useful
+2. mark it `Superseded`
+3. add the new entry
+4. update `docs/design/architecture.md` if the current system changed
+
+################################################################################
+FILE: project_template/docs/fixes/fixes_log.md
+################################################################################
+
+# Fixes Log — Outstanding Bugs and Issues
+
+> Live list of unresolved bugs, defects, broken flows, and important technical issues.
+> Keep entries concrete and actionable.
+> Remove resolved items instead of turning this file into a history archive.
+
+This file is for:
+- actual bugs
+- incorrect behavior
+- broken assumptions found during implementation
+- issues discovered during manual testing
+- important technical debt that actively causes defects or blocks progress
+
+This file is not for:
+- future features
+- vague ideas
+- roadmap items
+- long retrospectives
+
+---
+
+## Usage rules
+
+- Newest or highest-priority items go near the top.
+- Be specific about symptom and repro.
+- If the cause is unknown, say so.
+- If fixed, remove the entry.
+- If an issue turns out to be a design decision, move that insight to `docs/design/decisions.md`.
+
+---
+
+## Severity legend
+
+- 🔴 blocker — stops meaningful progress or core usage
+- 🟠 major — serious incorrect behavior, but work can continue
+- 🟡 minor — incorrect but non-blocking
+- 🔵 polish — rough edge, low risk, cosmetic or UX quality issue
+
+---
+
+## Entry template
+
+### [SEVERITY] Short title
+- **Symptom:** What goes wrong.
+- **Repro:** Exact steps to reproduce.
+- **Expected:** What should happen instead.
+- **Suspect:** File, subsystem, or unknown.
+- **Notes:** Any useful context, workaround, or related decision.
+
+---
+
+## Open issues
+
+No open issues.
+
+################################################################################
+FILE: project_template/docs/product/scope.md
+################################################################################
+
+# docs/product/scope.md
+
+# Product Scope
+
+> Practical boundary for what this project includes right now.
+> Keep this concrete and shorter than a full spec.
+> Delete this file during template bootstrap if roadmap + current feature are enough for the project.
+
+---
+
+## Purpose
+
+Define the current intended scope of the product:
+- what is in
+- what is out
+- what assumptions are being made
+
+This file should help prevent accidental scope creep.
+
+---
+
+## In scope
+
+List the capabilities, surfaces, or deliverables that this project is expected to include.
+
+- ...
+- ...
+- ...
+
+Group only if useful.
+
+### Core capabilities
+- ...
+- ...
+- ...
+
+### Supported surfaces
+- ...
+- ...
+- ...
+
+### Required operational behavior
+- ...
+- ...
+- ...
+
+Remove headings that are not useful.
+
+---
+
+## Out of scope
+
+List things that might sound related but are not part of the project right now.
+
+- ...
+- ...
+- ...
+
+Be explicit about tempting expansions.
+
+---
+
+## Assumptions
+
+State the few assumptions that scope depends on.
+
+- ...
+- ...
+- ...
+
+Examples:
+- users already have internal access
+- manual review is acceptable
+- only one platform matters initially
+- data volume is low in v1
+
+---
+
+## Constraints on scope
+
+These are not full architecture constraints.
+They are product boundaries that limit what will be built.
+
+- ...
+- ...
+- ...
+
+Examples:
+- no mobile app in v1
+- no multi-tenant support initially
+- no self-serve onboarding
+- English only for first release
+
+---
+
+## Scope checkpoints
+
+Use short bullets for the main delivery thresholds.
+
+### Now
+- ...
+
+### Next
+- ...
+
+### Later, if still justified
+- ...
+
+This should align with roadmap files, but not duplicate their task status.
+
+---
+
+## Open scope questions
+
+Questions that need human clarification before the scope should expand or narrow.
+
+- ...
+- ...
+- ...
+
+---
+
+## Update rule
+
+Update this file when:
+- a meaningful capability is added or removed from intended scope
+- a major exclusion changes
+- assumptions behind the product boundary change
+
+Do not use this file for implementation progress.
+Active work belongs in `docs/roadmap/current_feature.md`.
+Milestones belong in `docs/roadmap/next_phase.md`.
+
+################################################################################
+FILE: project_template/docs/product/vision.md
+################################################################################
+
+# Product Vision
+
+> Short statement of what this project is trying to achieve.
+> Keep this high-level and stable.
+> Delete this file during bootstrap if the project is too small or purely technical.
+
+---
+
+## Purpose
+
+State the product in one or two sentences.
+
+- What is being built:
+- Who it is for:
+- Why it matters:
+
+---
+
+## Problem
+
+What problem exists today?
+
+- Current pain:
+- Who feels it:
+- Why current options are insufficient:
+
+Keep this brief.
+
+---
+
+## Intended outcome
+
+What should be true if the project succeeds?
+
+- Users can ...
+- The system enables ...
+- The main improvement is ...
+
+Focus on outcomes, not implementation.
+
+---
+
+## Primary user or customer
+
+Name the main audience.
+
+### `<user type>`
+
+- Needs:
+- Current friction:
+- Value from this project:
+
+Add only the main user types that matter.
+
+---
+
+## Product shape
+
+Describe the expected form of the project.
+
+- Delivery form: app / API / automation / library / internal tool / other
+- Main interaction model:
+- Core capability:
+- Optional secondary capability:
+
+This is directional, not a full spec.
+
+---
+
+## Success signals
+
+How will we know this is working?
+
+- ...
+- ...
+- ...
+
+Use a few practical indicators only.
+
+---
+
+## Non-goals
+
+What this project is not trying to do right now?
+
+- ...
+- ...
+- ...
+
+This helps control scope during early work.
+
+---
+
+## Constraints that shape the product
+
+Only include product-level constraints.
+
+- ...
+- ...
+- ...
+
+Examples:
+- must work for internal staff only
+- must run offline
+- must support manual review
+- must avoid paid external services
+
+Technical details belong elsewhere unless they directly shape the product.
+
+---
+
+## Update rule
+
+Update this file when:
+- the project purpose changes
+- the target user changes
+- the intended outcome changes
+- major non-goals change
+
+Detailed feature scope belongs in `docs/product/scope.md`.
+Active execution status belongs in `docs/roadmap/current_feature.md`.
+
+################################################################################
+FILE: project_template/docs/roadmap/archive.md
+################################################################################
+
+# Archive — Completed Work
+
+> Record shipped or explicitly completed milestones only.
+> Keep this short.
+> Delete this file during bootstrap if the project is too small to need a completion log.
+
+---
+
+## Purpose
+
+Use this file to keep a lean record of completed work after it leaves:
+- `docs/roadmap/current_feature.md`
+- `docs/roadmap/next_phase.md`
+
+This is not a diary.
+This is not a backlog.
+This is not a bug history.
+
+---
+
+## What belongs here
+
+- completed milestones
+- completed feature slices worth remembering
+- notable shipped changes
+- major bootstrap completion markers
+
+Keep entries brief and outcome-focused.
+
+---
+
+## Entry format
+
+### A-XXX — `<title>`
+- **Completed:** YYYY-MM-DD
+- **Type:** milestone / feature / bootstrap / fix bundle
+- **Related:** `path/to/file`, `path/to/file`
+
+#### Outcome
+What is now true.
+
+#### Notes
+Only details worth preserving for future orientation.
+
+---
+
+## Entries
+
+<!-- Add completed items here. -->
+
+---
+
+## Move-to-archive rule
+
+Move work here when:
+- it is finished,
+- the current state is no longer active,
+- and the user has signed off if signoff is required.
+
+Then remove or simplify the old active planning text so roadmap files stay current.
+
+---
+
+## Keep it lean
+
+Do not copy full task lists here.
+Do not duplicate design decisions.
+Do not paste verification logs.
+Link to canonical files if more detail still matters.
+
+################################################################################
+FILE: project_template/docs/roadmap/current_feature.md
+################################################################################
+
+# Current Feature
+
+> The single active workstream. Keep this file practical and current.
+> This is the first file the agent should read at session start.
+
+---
+
+## Status
+- State: not started
+- Owner: AI agent + human
+- Priority: highest active workstream
+
+---
+
+## Goal
+Describe the one thing currently being built or resolved.
+
+If this project is still being bootstrapped from the template, say that clearly:
+- adapt template to project
+- prune unnecessary files
+- establish architecture + roadmap
+- define first implementation milestone
+
+---
+
+## Why this matters
+Briefly explain why this work is the priority now.
+
+---
+
+## Scope
+What is included in this feature/workstream:
+- item
+- item
+- item
+
+What is explicitly out of scope:
+- item
+- item
+
+---
+
+## Current status
+What already exists:
+- item
+- item
+
+What is missing:
+- item
+- item
+
+---
+
+## Next actions
+Use a short actionable list.
+
+1. ...
+2. ...
+3. ...
+4. ...
+
+---
+
+## Open questions
+Questions that need human input or architectural clarification.
+
+- ...
+- ...
+- ...
+
+---
+
+## Risks / traps
+Known pitfalls, constraints, or things already learned.
+
+- ...
+- ...
+- ...
+
+---
+
+## Done looks like
+Define what completion means for this workstream.
+
+- ...
+- ...
+- ...
+
+################################################################################
+FILE: project_template/docs/roadmap/next_phase.md
+################################################################################
+
+# Next Phase — Roadmap
+
+> Milestones and upcoming work.
+> Keep this file structured and decision-oriented.
+> Do not turn it into a long narrative log.
+
+Legend:
+- ⬜ not started
+- 🚧 in progress
+- ✅ done
+- ⏸ deferred
+
+---
+
+## Current milestone
+### M0 — Project bootstrap
+Status: 🚧
+
+Goal:
+- understand the project
+- adapt and prune the template
+- establish core docs
+- define first real implementation milestone
+
+Checklist:
+- ⬜ clarify project purpose and scope
+- ⬜ identify and delete unnecessary template files/folders
+- ⬜ populate README and CLAUDE instructions for this specific project
+- ⬜ define architecture skeleton
+- ⬜ define current feature
+- ⬜ define next milestone
+
+---
+
+## Upcoming milestones
+
+### M1 — First working vertical slice
+Status: ⬜
+
+Goal:
+Describe the first meaningful end-to-end slice of the project.
+
+Possible scope:
+- ...
+- ...
+- ...
+
+### M2 — Core system expansion
+Status: ⬜
+
+Goal:
+Describe the next major capability after the vertical slice.
+
+Possible scope:
+- ...
+- ...
+- ...
+
+### M3 — Polish / scale / hardening
+Status: ⬜
+
+Goal:
+Describe the stabilization or broader rollout phase.
+
+Possible scope:
+- ...
+- ...
+- ...
+
+---
+
+## Deferred / parked
+Things intentionally not being done now.
+
+- ⏸ ...
+- ⏸ ...
+- ⏸ ...
+
+---
+
+## Open planning questions
+Questions that affect roadmap order or structure.
+
+- ...
+- ...
+- ...
+
+---
+
+## Notes
+- Only one detailed active workstream should live in `current_feature.md`.
+- Move completed milestones to `archive.md` after user signoff.
+- If priorities change, update this file and `current_feature.md` together.
+
+################################################################################
+FILE: project_template/docs/workflow/agent_workflow.md
+################################################################################
+
+# docs/workflow/agent_workflow.md
+
+# Agent Workflow
+
+> Repeatable workflow for AI-assisted work in this repository.
+> Keep this file lean.
+> Stable operating rules belong in `CLAUDE.md`.
+> Delete this file during template bootstrap if `CLAUDE.md` is enough.
+
+---
+
+## Purpose
+
+Use this file to define the normal working loop:
+- how to start a session
+- how to work on one active slice
+- how to verify changes
+- how to update canonical docs
+- how to leave the repo ready for the next session
+
+Current project state does not belong here.
+That lives in `docs/roadmap/current_feature.md`.
+
+---
+
+## 1. Start the session
+
+Read only:
+1. `docs/roadmap/current_feature.md`
+2. `docs/fixes/fixes_log.md`
+3. `docs/roadmap/next_phase.md` (skim only)
+
+Then read any additional file only if the task needs it.
+
+Do not start with a broad repo scan.
+
+---
+
+## 2. Check whether this is still template bootstrap
+
+If this repository still looks like a fresh template copy:
+- follow `PROMPT_START.md`
+- understand the real project
+- prune unnecessary template files/folders
+- populate the retained core docs
+- define the first real active workstream
+
+Do not keep irrelevant scaffolding just because it exists.
+
+---
+
+## 3. Reconstruct the active state
+
+Before coding, identify:
+- the current goal
+- what is already done
+- the next concrete action
+- blockers
+- relevant open bugs
+- applicable constraints
+- any human dependency
+
+If `docs/roadmap/current_feature.md` is stale, update it before substantial work.
+
+---
+
+## 4. Work in the smallest coherent slice
+
+A good slice:
+- has one clear outcome
+- touches only relevant files
+- can be verified
+- leaves the repo in a valid state
+
+Avoid speculative abstraction and unrelated cleanup unless required.
+
+---
+
+## 5. Resolve uncertainty correctly
+
+### Technical uncertainty
+Investigate narrowly:
+- relevant source
+- nearby tests
+- relevant config
+- targeted search
+- architecture/decision docs if needed
+
+### Product or UX uncertainty
+Ask the human instead of silently deciding.
+
+### Architectural uncertainty
+If it changes boundaries, ownership, interfaces, or long-term constraints:
+- identify the options
+- state the trade-offs
+- get approval if needed
+- record the result in `docs/design/decisions.md`
+- update `docs/design/architecture.md`
+
+### Low-risk reversible uncertainty
+Use the simplest reasonable default.
+
+---
+
+## 6. Implement
+
+While implementing:
+- change only what the slice requires
+- preserve boundaries
+- avoid duplicate sources of truth
+- add or update tests when behavior changes
+- keep generated artifacts separate from authored files
+- avoid unnecessary new dependencies
+
+If the plan turns out to be wrong, revise it instead of pushing through on bad assumptions.
+
+---
+
+## 7. Verify
+
+Use the narrowest relevant verification first:
+- targeted tests
+- focused build/run checks
+- lint/type checks if relevant
+- manual verification if required
+
+If something cannot be verified, say:
+- what was not checked
+- why
+- what risk remains
+- what human action is needed
+
+---
+
+## 8. Update canonical files
+
+Update only the files affected by the new truth.
+
+- `docs/roadmap/current_feature.md` — active work status and next action
+- `docs/roadmap/next_phase.md` — milestone ordering or future scope changes
+- `docs/fixes/fixes_log.md` — unresolved defects
+- `docs/design/architecture.md` — current system structure
+- `docs/design/decisions.md` — important accepted choices
+- `docs/workflow/human_handoff.md` — required human actions
+
+Do not duplicate the same status across multiple files.
+
+---
+
+## 9. Request human action when needed
+
+If the next step requires human action, use `docs/workflow/human_handoff.md`.
+
+Typical reasons:
+- credentials or secrets
+- external service configuration
+- manual testing
+- UX or scope approval
+- deployment
+- signoff
+
+Keep handoffs small and explicit.
+
+---
+
+## 10. End the session cleanly
+
+Before finishing, make sure:
+- the active slice is reflected in code and docs
+- verification results are clear
+- unresolved issues are documented
+- required human actions are listed
+- the exact next action is obvious
+
+The next session should be able to resume from the standard session-start files without reconstructing context from chat history.
+
+################################################################################
+FILE: project_template/docs/workflow/human_handoff.md
+################################################################################
+
+# docs/workflow/human_handoff.md
+
+# Human Handoff
+
+> Canonical list of actions that require human input, approval, access, or execution.
+> Keep this file short and actionable.
+> Delete it during template bootstrap if the project does not need it.
+
+---
+
+## Purpose
+
+Use this file when the agent cannot safely or directly complete something.
+
+Typical cases:
+- credentials or access
+- product or UX approval
+- external service setup
+- deployment or privileged action
+- manual verification
+- milestone signoff
+
+This file is not a general task list.
+
+---
+
+## Rules
+
+- Only create a handoff when human action is genuinely required.
+- Ask for the smallest action needed to unblock progress.
+- Never ask for secrets to be pasted into source, docs, commits, or chat.
+- Give exact steps when manual action is needed.
+- Remove completed handoffs promptly.
+- Update the affected canonical files after the human responds.
+
+---
+
+## Priority
+
+- 🔴 Blocking
+- 🟠 Required soon
+- 🟡 Review
+- 🔵 Optional
+
+---
+
+## Open handoffs
+
+No open handoffs.
+
+Replace the line above when real handoffs exist.
+
+---
+
+## Entry template
+
+### H-XXX — `<short title>`
+
+- **Priority:** 🔴 Blocking
+- **Owner:** `<person or role>`
+- **Related work:** `docs/roadmap/current_feature.md`
+- **Status:** Open
+
+#### Why
+
+Why the agent cannot complete this directly.
+
+#### Human action
+
+1. ...
+2. ...
+3. ...
+
+If this is a decision, give options:
+
+- **Option A:** ...
+  - Impact: ...
+- **Option B:** ...
+  - Impact: ...
+
+#### Expected result
+
+What the human should provide, approve, change, or verify.
+
+#### Verification
+
+How the result should be checked.
+
+- ...
+- ...
+
+#### Agent follow-up
+
+After completion, the agent should:
+1. verify where possible
+2. continue the blocked work
+3. update canonical docs
+4. remove this handoff
+
+---
+
+## Manual verification template
+
+### H-XXX — Verify `<feature or behavior>`
+
+- **Priority:** 🟡 Review
+- **Owner:** Human
+- **Environment:** `<local, staging, production, device, platform>`
+- **Related work:** `docs/roadmap/current_feature.md`
+- **Status:** Open
+
+#### Preconditions
+
+- ...
+- ...
+
+#### Steps
+
+1. ...
+2. ...
+3. ...
+
+#### Expected result
+
+- ...
+- ...
+
+#### Report back
+
+Provide:
+- pass or fail
+- failed step if any
+- observed result
+- relevant sanitized logs or screenshots
+
+---
+
+## Sensitive actions
+
+For secrets or privileged access:
+- name the secret or setting, not its value
+- state where it should be configured
+- do not store it in this file
+- do not ask for it in chat
+- provide a safe validation method
+
+Example:
+- **Secret name:** `SERVICE_API_KEY`
+- **Configure in:** local `.env` or approved secret manager
+- **Validation:** run the connection check and report success or sanitized error only
+
+---
+
+## Cleanup rule
+
+A handoff is complete only when:
+- the action or decision happened
+- the agent acknowledged or verified it
+- blocked work resumed or was intentionally deferred
+- relevant canonical files were updated
+- the completed entry was removed
+
+If the outcome is an important lasting choice, record that in `docs/design/decisions.md`.
+
+################################################################################
+FILE: project_template/PROMPT_START.md
+################################################################################
+
+# First Prompt for New Projects Based on This Template
+
+Use this prompt when starting a brand-new project from this template.
+
+---
+
+You are working in a new project that was created from a generic AI-agent coding template.
+
+Your job is to bootstrap the project correctly before writing much code.
+
+## Your goals
+
+1. Understand the actual project I want to build.
+2. Adapt this template to the project.
+3. Delete template files/folders that are not needed.
+4. Fill in the important core docs.
+5. Propose the first milestone and the first active feature.
+6. Only then begin implementation.
+
+## Very important template rule
+
+This template intentionally contains **more files and folders than the project may need**.
+
+You must actively prune it.
+
+Do not keep unnecessary template files "for later" unless there is a strong reason.
+Reducing irrelevant files saves tokens and keeps the repo easier to operate.
+
+If you are unsure whether something is needed:
+- ask,
+- or keep it temporarily but explicitly mark it as provisional and list it for review.
+
+## First tasks
+
+Please do the following in order:
+
+### 1. Read only the minimum required files
+Start with:
+- `README.md`
+- `CLAUDE.md`
+- `docs/roadmap/current_feature.md`
+- `docs/roadmap/next_phase.md`
+
+Then stop and ask me the minimum set of questions needed to understand:
+- what the project is,
+- what kind of output/product it should become,
+- whether there are technical constraints,
+- whether there is existing code/content to integrate,
+- what files/folders from the template are probably unnecessary.
+
+Do not start broad repo reading at this stage.
+
+### 2. Clarify the project
+From my answers, establish:
+- project purpose
+- scope
+- likely architecture shape
+- likely workflow shape
+- what parts of the template are useful vs unnecessary
+
+### 3. Prune the template
+Once the project is understood:
+- propose a list of files/folders to delete,
+- delete them after confirmation, or directly if they are clearly irrelevant and low-risk,
+- keep the structure lean.
+
+### 4. Fill the core files
+Create or update at least:
+- `README.md`
+- `CLAUDE.md`
+- `docs/roadmap/current_feature.md`
+- `docs/roadmap/next_phase.md`
+- `docs/fixes/fixes_log.md`
+
+Also update these if relevant:
+- `docs/design/architecture.md`
+- `docs/design/decisions.md`
+- `docs/product/vision.md`
+- `docs/product/scope.md`
+- `docs/workflow/human_handoff.md`
+
+### 5. Establish the first execution plan
+Define:
+- the current active feature/workstream
+- the next milestone(s)
+- known open questions
+- what not to work on yet
+
+### 6. Then begin implementation
+Only after the above is done should you begin coding.
+
+## Working style requirements
+
+- Be concise.
+- Read narrowly.
+- Avoid duplicating information across docs.
+- Put each fact in its canonical file.
+- Ask before making product or UX decisions that are not obvious.
+- Do not mark anything as shipped without explicit signoff.
+
+## Expected output from your first pass
+
+After the bootstrap pass, I want:
+- a cleaned project structure,
+- core docs populated,
+- a clear current feature,
+- a clear next-phase roadmap,
+- and a short explanation of what you kept, what you deleted, and why.
+
+################################################################################
+FILE: project_template/README.md
+################################################################################
+
+# README.md
+
+# AI Agent Coding Project Template
+
+A reusable template repo for starting and running projects with Claude or other coding agents.
+
+This template is not tied to a specific domain. Its purpose is to provide:
+- a clean project structure
+- operating instructions for the agent
+- roadmap and fix tracking
+- architecture and workflow docs
+- a low-noise, token-efficient way of working
+
+## What this template is for
+
+Use this when starting a new project where an AI coding agent will help design, plan, implement, debug, and document the work.
+
+The template is designed to:
+- keep the agent focused on one active workstream at a time
+- separate live execution docs from reference docs
+- reduce repeated explanations across sessions
+- make progress visible and auditable
+- preserve context without forcing the agent to reread the whole repo every time
+
+## Important template rule
+
+This template intentionally contains more files and folders than any one project will need.
+
+The first setup pass for a new project should:
+1. keep the useful structure,
+2. fill in the important files,
+3. delete any template files or folders that are not needed for that specific project.
+
+This improves both clarity and token efficiency.
+
+## Recommended startup flow
+
+When creating a new project from this template:
+
+1. Open this project with the coding agent.
+2. Read `CLAUDE.md`.
+3. Give the agent the contents of `PROMPT_START.md`.
+4. Let the agent:
+   - understand the new project,
+   - prune unnecessary template files,
+   - fill in the core docs,
+   - propose the first milestone and active feature,
+   - only then begin implementation.
+
+## Core files
+
+- `CLAUDE.md` — main operating instructions for the agent
+- `PROMPT_START.md` — first prompt for bootstrap
+- `docs/roadmap/current_feature.md` — the single active workstream
+- `docs/roadmap/next_phase.md` — upcoming milestones
+- `docs/roadmap/archive.md` — completed work
+- `docs/fixes/fixes_log.md` — outstanding bugs and issues
+- `docs/design/architecture.md` — technical structure and boundaries
+- `docs/design/decisions.md` — important decisions and rationale
+- `docs/workflow/human_handoff.md` — required manual human actions
+
+## Template philosophy
+
+This template favors:
+- one source of truth per topic
+- one active workstream at a time
+- lean docs over long manuals
+- explicit human and agent boundaries
+- progress tracking by file, not by chat history
+
+################################################################################
+FILE: project_template/scripts/check_requirements.sh
+################################################################################
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+required_files=(
+  "README.md"
+  "CLAUDE.md"
+  "PROMPT_START.md"
+  "docs/roadmap/current_feature.md"
+  "docs/roadmap/next_phase.md"
+  "docs/fixes/fixes_log.md"
+)
+
+optional_files=(
+  "docs/roadmap/archive.md"
+  "docs/design/architecture.md"
+  "docs/design/decisions.md"
+  "docs/design/data_schema.md"
+  "docs/product/vision.md"
+  "docs/product/scope.md"
+  "docs/workflow/agent_workflow.md"
+  "docs/workflow/human_handoff.md"
+)
+
+missing_required=0
+
+echo "Checking required files..."
+for file in "${required_files[@]}"; do
+  if [[ -f "$file" ]]; then
+    echo "  [ok] $file"
+  else
+    echo "  [missing] $file"
+    missing_required=1
+  fi
+done
+
+echo
+echo "Checking optional template files..."
+for file in "${optional_files[@]}"; do
+  if [[ -f "$file" ]]; then
+    echo "  [present] $file"
+  else
+    echo "  [absent] $file"
+  fi
+done
+
+echo
+if [[ "$missing_required" -ne 0 ]]; then
+  echo "Template check failed: one or more required files are missing."
+  exit 1
+fi
+
+echo "Template check passed."
+
+################################################################################
+FILE: README.md
+################################################################################
+
+# README.md
+
+# Agent Project Template Kit
+
+This repository maintains a reusable starter template for AI-agent coding projects.
+
+It has two layers:
+
+- root files for maintaining the template system itself
+- `project_template/` for the files that get copied into a new project
+
+## Repository structure
+
+    create_template_repo.py      # copies the starter template into a new project folder
+    project_template/            # the actual project starter payload
+      README.md
+      CLAUDE.md
+      PROMPT_START.md
+      docs/
+      scripts/
+
+## How to create a new project
+
+Run:
+
+    python create_template_repo.py ../my_new_project
+
+This creates a fresh copy of `project_template/` in the target folder.
+
+Then open the new project folder with the coding agent and start from:
+
+- `CLAUDE.md`
+- `PROMPT_START.md`
+
+## Maintenance scope
+
+Use this root repo to:
+- improve the reusable template
+- refine copy/bootstrap behavior
+- keep the starter project lean and practical
+
+Do not treat this root repo as a normal end-user product project.
+
+## Design intent
+
+The template is intentionally a little over-provisioned at the start.
+
+When a new project is created from it, the first agent should:
+- understand the real project
+- keep only useful files
+- delete unnecessary template scaffolding
+- define the first active workstream
+- only then begin implementation
