@@ -16,20 +16,35 @@ The repository has two layers:
 
 ```text
 agent-project-template-kit/
-├── create_template_repo.py
-└── project_template/
-    ├── README.md
-    ├── CLAUDE.md
-    ├── PROMPT_START.md
+├── README.md                # Guide for maintaining and using this template repository
+├── CLAUDE.md                # Instructions for agents working on the template repository itself
+├── create_template_repo.py  # Generates a new project from project_template/
+└── project_template/        # Complete starter payload copied into each generated project
+    ├── README.md            # Starting README to customize for the generated project
+    ├── CLAUDE.md            # Operating instructions for agents building the generated project
+    ├── PROMPT_START.md      # Initial prompt for bootstrapping and pruning the generated project
     ├── docs/
-    │   ├── design/
-    │   ├── fixes/
-    │   ├── product/
-    │   ├── roadmap/
-    │   └── workflow/
-    ├── scripts/
-    └── templates/
+    │   ├── design/          # Architecture, data model, and technical decisions
+    │   ├── fixes/           # Outstanding bugs and defects
+    │   ├── product/         # Product vision and scope
+    │   ├── roadmap/         # Active workstream, future phases, and completed work
+    │   └── workflow/        # Agent workflow and human handoffs
+    ├── scripts/             # Scripts copied into generated projects
+    └── templates/           # Reusable document templates for generated projects
 ```
+
+### Root files versus project template files
+
+The similarly named files serve different scopes:
+
+- **Root `README.md`:** Explains how to use, maintain, and improve the shared template repository.
+- **Root `CLAUDE.md`:** Guides agents modifying the template system, generator, or starter payload.
+- **`project_template/README.md`:** Becomes the README of each generated project and must be customized during bootstrap.
+- **`project_template/CLAUDE.md`:** Becomes the operating guide for agents implementing the generated project.
+
+Changes at the root affect how the template repository is maintained.
+
+Changes inside `project_template/` affect the default contents of future generated projects.
 
 ### Root-level responsibility
 
